@@ -53,11 +53,6 @@ Contributions are welcome! Please feel free to submit a pull request or create a
 
 This project is licensed under the MIT License.
 
-## Acknowledgments
-
-- Thanks to all contributors and libraries that make this project possible.
-- Inspired by various application management tools.
-
 ## Contact
 
 For any questions or suggestions, feel free to reach out.
