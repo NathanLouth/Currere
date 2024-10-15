@@ -130,7 +130,7 @@ namespace Currere
                 Source = GetIconFromFile(programPath),
                 Width = 64,
                 Height = 64,
-                Margin = new Thickness(5)
+                Margin = new Thickness(0) // Remove margin from the image
             };
 
             // Set BitmapScalingMode for high-quality rendering
@@ -143,35 +143,111 @@ namespace Currere
                 HorizontalAlignment = HorizontalAlignment.Center
             };
 
-            var stackPanel = new StackPanel
+            // Create a Border for rounded corners
+            var border = new Border
             {
-                Orientation = Orientation.Vertical,
-                Children = { programImage, programName },
+                CornerRadius = new CornerRadius(10), // Adjust the radius as needed
                 Margin = new Thickness(5),
+                Padding = new Thickness(5), // Add padding of 5 pixels
                 Background = new SolidColorBrush(Colors.Transparent) // Default background
             };
 
+            var stackPanel = new StackPanel
+            {
+                Orientation = Orientation.Vertical,
+                Children = { programImage, programName }
+            };
+
+            // Add stackPanel to the border
+            border.Child = stackPanel;
+
             // Event handler for mouse enter
-            stackPanel.MouseEnter += (s, e) =>
+            border.MouseEnter += (s, e) =>
             {
                 programImage.Opacity = 0.8; // Slightly dim the icon
-                stackPanel.Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(255, 30, 30, 30)); // Dark background on hover
+                border.Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(255, 30, 30, 30)); // Dark background on hover
             };
 
             // Event handler for mouse leave
-            stackPanel.MouseLeave += (s, e) =>
+            border.MouseLeave += (s, e) =>
             {
                 programImage.Opacity = 1.0; // Reset the opacity
-                stackPanel.Background = new SolidColorBrush(Colors.Transparent); // Reset background
+                border.Background = new SolidColorBrush(Colors.Transparent); // Reset background
             };
 
-            stackPanel.MouseDown += (s, e) =>
+            // Event handler for left mouse click (to launch the program)
+            border.MouseDown += (s, e) =>
             {
-                System.Diagnostics.Process.Start(programPath);
+                if (e.LeftButton == MouseButtonState.Pressed)
+                {
+                    System.Diagnostics.Process.Start(programPath);
+                }
+                else if (e.RightButton == MouseButtonState.Pressed) // Handle right-click
+                {
+                    RemoveProgram(border, programPath); // Pass the border instead of stackPanel
+                }
             };
 
-            ProgramWrapPanel.Children.Add(stackPanel);
+            ProgramWrapPanel.Children.Add(border);
         }
+
+
+
+        private void RemoveProgram(Border border, string programPath)
+        {
+            // Create the confirmation window and set its owner
+            ConfirmationWindow confirmationWindow = new ConfirmationWindow
+            {
+                Owner = this // Set the owner to the current MainWindow
+            };
+
+            confirmationWindow.ShowDialog(); // Show the dialog and wait for user response
+
+            // Check if the user confirmed the removal
+            if (confirmationWindow.IsConfirmed)
+            {
+                // Remove from UI
+                ProgramWrapPanel.Children.Remove(border);
+
+                // Remove from the list of selected programs
+                _selectedPrograms.Remove(programPath);
+
+                // Update the registry
+                RemoveProgramFromRegistry(programPath);
+            }
+        }
+
+
+
+
+        private void RemoveProgramFromRegistry(string programPath)
+        {
+            try
+            {
+                using (var key = Registry.CurrentUser.CreateSubKey(RegistryKeyPath))
+                {
+                    if (key != null)
+                    {
+                        var existingPrograms = key.GetValue("ProgramList") as string;
+                        if (!string.IsNullOrEmpty(existingPrograms))
+                        {
+                            var updatedPrograms = existingPrograms
+                                .Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
+                                .Where(p => p != programPath) // Remove the program being deleted
+                                .ToList();
+
+                            // Update the registry only if there are remaining programs
+                            key.SetValue("ProgramList", string.Join(";", updatedPrograms));
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error removing program from registry: {ex.Message}");
+            }
+        }
+
 
         private BitmapImage GetIconFromFile(string filePath)
         {
@@ -216,6 +292,57 @@ namespace Currere
             }
 
         }
+
+        private void OpenAsOtherUser_Click(object sender, RoutedEventArgs e)
+        {
+            // Create a new window for entering credentials
+            var credentialWindow = new CredentialWindow
+            {
+                Owner = this // Set the owner to the current MainWindow
+            };
+
+            if (credentialWindow.ShowDialog() == true)
+            {
+                string username = credentialWindow.Username;
+                string password = credentialWindow.Password;
+
+                // Create a process start info for running as another user
+                var startInfo = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = System.Reflection.Assembly.GetExecutingAssembly().Location, // Path to the executable
+                    UserName = username,
+                    Password = ConvertToSecureString(password), // Convert password to SecureString
+                    Domain = "", // Specify domain if needed
+                    UseShellExecute = false,
+                    LoadUserProfile = true
+                };
+
+                try
+                {
+                    // Start the new process
+                    System.Diagnostics.Process.Start(startInfo);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error starting process: {ex.Message}");
+                }
+
+                // Close the original application
+                Application.Current.Shutdown();
+            }
+        }
+
+        // Method to convert password string to SecureString
+        private System.Security.SecureString ConvertToSecureString(string password)
+        {
+            var secureString = new System.Security.SecureString();
+            foreach (char c in password)
+            {
+                secureString.AppendChar(c);
+            }
+            return secureString;
+        }
+
 
         private void SearchBox_GotFocus(object sender, RoutedEventArgs e)
         {

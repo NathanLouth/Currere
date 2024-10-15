@@ -12,7 +12,6 @@
         ResizeMode="NoResize" 
         Background="Black"
         Title="Currere"
-        MouseDown="Window_MouseDown"
         Closed="Window_Closed">
     <Grid>
         <Grid Margin="0,0,0,396" MouseDown="Window_MouseDown">
@@ -39,7 +38,7 @@
                     </Style>
                 </Image.Style>
             </Image>
-            <Label Content="Currere" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Foreground="White" FontFamily="Bahnschrift" FontSize="24"/>
+            <Label Content="Currere" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Foreground="White" FontFamily="Bahnschrift" FontSize="24" MouseDown="Window_MouseDown"/>
             <Label Content="About" HorizontalAlignment="Left" Margin="10,415,0,0" VerticalAlignment="Top" Foreground="White" Height="25" Width="46" MouseDown="AboutClicked">
                 <Label.Style>
                     <Style TargetType="{x:Type Label}">
@@ -64,7 +63,7 @@
                     </Style>
                 </Label.Style>
             </Label>
-            <Label Name="CurrentUserLabel" Content="Running as:" HorizontalAlignment="Center" Height="28" Margin="0,65,0,0" VerticalAlignment="Top" Width="336" Foreground="White"/>
+            <Label Name="CurrentUserLabel" Content="Running as:" HorizontalAlignment="Left" Height="28" Margin="10,65,0,0" VerticalAlignment="Top" Width="215" Foreground="White"/>
 
             <!-- TextBox for search input -->
             <TextBox x:Name="SearchBox" 
@@ -80,6 +79,7 @@
 
             <WrapPanel x:Name="ProgramWrapPanel" Margin="10,93,10,75" />
             <Button x:Name="AddExecutable" Content="Add Executable" Click="AddExecutable_Click" Width="100" Height="30" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="246,380,0,0"/>
+            <Button Content="Open As Other User" Click="OpenAsOtherUser_Click" HorizontalAlignment="Left" Height="28" Margin="230,65,0,0" VerticalAlignment="Top" Width="116"/>
         </Grid>
     </Grid>
 </Window>
