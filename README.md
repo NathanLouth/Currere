@@ -1,6 +1,6 @@
 # Currere
 
-Currere is a Windows application designed for easy management and launching of executable programs as a different user. Users can add, remove, and search for programs efficiently, with the added convenience of launching them directly from the interface.
+Currere is a Windows application designed for easy management and launching of executable programs as a different user. Users can add, remove, and search for programs efficiently.
 
 ![Image of Currere Program](https://github.com/NathanLouth/Currere/blob/main/img/Example.png?raw=true)
 
